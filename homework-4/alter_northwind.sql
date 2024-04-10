@@ -9,6 +9,21 @@ ALTER TABLE products ADD CONSTRAINT discontinued CHECK (discontinued IN (0, 1));
 SELECT * INTO discontinued_products FROM products WHERE discontinued = 1;
 
 -- 4. Удалить из products товары, снятые с продажи (discontinued = 1)
--- Для 4-го пункта может потребоваться удаление ограничения, связанного с foreign_key. Подумайте, как это можно решить, чтобы связь с таблицей order_details все же осталась.
-ALTER TABLE order_details DROP CONSTRAINT fk_order_details_products;
-DELETE FROM products WHERE discontinued = 1
+-- Для 4-го пункта может потребоваться удаление ограничения, связанного с foreign_key.
+-- Подумайте, как это можно решить, чтобы связь с таблицей order_details все же осталась.
+--ALTER TABLE order_details DROP CONSTRAINT fk_order_details_products;
+--DELETE FROM products WHERE discontinued = 1
+
+-- Изменение ограничения на ON DELETE CASCADE
+ALTER TABLE order_details
+DROP CONSTRAINT fk_order_details_products,
+ADD CONSTRAINT fk_order_details_products
+FOREIGN KEY (product_id)
+REFERENCES products(product_id)
+ON DELETE CASCADE;
+
+-- Удаление связанных записей из таблицы order_details
+DELETE FROM order_details
+WHERE product_id IN (SELECT product_id FROM products WHERE discontinued = 1);
+-- Удаление товаров со значением discontinued = 1
+DELETE FROM products WHERE discontinued = 1;
